@@ -21,8 +21,7 @@ export async function POST(request: Request) {
         // The user's form has contactNo. We'll pass it as phoneNumber and countryCode.
 
         const payload = {
-            countryCode: countryCode,
-            phoneNumber: phoneNumber,
+            fullPhoneNumber: `${countryCode}${phoneNumber}`.replace('+', ''),
             type: "Template",
             template: {
                 name: "indasanalytics_",

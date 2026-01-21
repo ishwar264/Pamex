@@ -233,9 +233,32 @@ export default function DataCollectionForm() {
                 });
             } catch (whatsappError: any) {
                 console.error("WhatsApp Error:", whatsappError);
+
+                // Save to backup sheet: "Not Connected on Whatsapp Pamex"
+                try {
+                    // Update this URL with the Google Script for the backup sheet
+                    const BACKUP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyO2vk7uhfI9XRx_DZhV6L5is9FzIS6rEfIEGSVfXGGuw-_Qf-fF65TG6BdioXLQrPq/exec";
+
+                    await fetch(BACKUP_WEB_APP_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: {
+                            "Content-Type": "text/plain;charset=utf-8",
+                        },
+                        body: JSON.stringify({
+                            ...payload,
+                            whatsapp_status: "FAILED",
+                            error_reason: whatsappError.message || "Template not found or number error",
+                            backup_sheet: "Not Connected on Whatsapp Pamex"
+                        }),
+                    });
+                } catch (backupError) {
+                    console.error("Backup Sheet Error:", backupError);
+                }
+
                 toast({
                     title: "WhatsApp Failed",
-                    description: whatsappError.message || "Could not send automated message.",
+                    description: "Details saved to backup sheet, but message not sent.",
                     variant: "destructive",
                 });
             }
