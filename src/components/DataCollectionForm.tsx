@@ -237,7 +237,7 @@ export default function DataCollectionForm() {
                 // Save to backup sheet: "Not Connected on Whatsapp Pamex"
                 try {
                     // Update this URL with the Google Script for the backup sheet
-                    const BACKUP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyO2vk7uhfI9XRx_DZhV6L5is9FzIS6rEfIEGSVfXGGuw-_Qf-fF65TG6BdioXLQrPq/exec";
+                    const BACKUP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdndngvElGi39kjRQfSUKMzQD4FhJOzxkyBMZWXxyJ9kSih4He7zs-Y0zaX2TqYGWm/exec";
 
                     await fetch(BACKUP_WEB_APP_URL, {
                         method: "POST",
