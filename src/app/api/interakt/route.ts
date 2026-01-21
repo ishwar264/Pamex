@@ -3,22 +3,14 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { phoneNumber, countryCode, bodyValues } = body;
-
-        if (!phoneNumber || !countryCode) {
-            return NextResponse.json({ error: 'Phone number and country code are required' }, { status: 400 });
-        }
+        const { phoneNumber, countryCode, bodyValues, leadData } = body;
 
         const INTERAKT_API_KEY = process.env.INTERAKT_API_KEY;
+        const BACKUP_URL = "https://script.google.com/macros/s/AKfycbzdndngvElGi39kjRQfSUKMzQD4FhJOzxkyBMZWXxyJ9kSih4He7zs-Y0zaX2TqYGWm/exec";
 
         if (!INTERAKT_API_KEY) {
-            console.error('INTERAKT_API_KEY is not defined in environment variables');
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
         }
-
-        // Determine if we should use fullPhoneNumber or split
-        // Interakt docs: You must provide either (countryCode + phoneNumber) OR (fullPhoneNumber).
-        // The user's form has contactNo. We'll pass it as phoneNumber and countryCode.
 
         const payload = {
             fullPhoneNumber: `${countryCode}${phoneNumber}`.replace('+', ''),
@@ -30,9 +22,8 @@ export async function POST(request: Request) {
             }
         };
 
-        console.log('Sending to Interakt:', JSON.stringify(payload, null, 2));
-
-        const response = await fetch('https://api.interakt.ai/v1/public/message/', {
+        // Attempt Interakt WhatsApp
+        const interaktResponse = await fetch('https://api.interakt.ai/v1/public/message/', {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${INTERAKT_API_KEY}`,
@@ -41,14 +32,34 @@ export async function POST(request: Request) {
             body: JSON.stringify(payload)
         });
 
-        const data = await response.json();
+        const data = await interaktResponse.json();
 
-        if (!response.ok) {
-            console.error('Interakt API Error:', data);
-            return NextResponse.json({ error: data.message || 'Failed to send WhatsApp message' }, { status: response.status });
+        if (!interaktResponse.ok) {
+            console.error('Interakt Failed, sending to backup sheet...', data);
+
+            // WHATSAPP FAILED -> SEND TO BACKUP SHEET FROM SERVER
+            try {
+                await fetch(BACKUP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        ...leadData,
+                        whatsapp_status: "FAILED",
+                        error_reason: data.message || "Template/Number Error"
+                    })
+                });
+            } catch (backupErr) {
+                console.error('Backup Sheet Fetch Failed:', backupErr);
+            }
+
+            return NextResponse.json({
+                success: false,
+                error: data.message || 'WhatsApp Failed, saved to backup sheet'
+            }, { status: 400 });
         }
 
         return NextResponse.json({ success: true, data });
+
     } catch (error: any) {
         console.error('Interakt Route Error:', error);
         return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

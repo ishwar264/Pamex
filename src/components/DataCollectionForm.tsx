@@ -219,6 +219,7 @@ export default function DataCollectionForm() {
                         bodyValues: [
                             `${values.ownerName}, ${values.companyName}` // Variable {{1}}
                         ],
+                        leadData: values // Send full data for backup
                     }),
                 });
 
@@ -233,32 +234,9 @@ export default function DataCollectionForm() {
                 });
             } catch (whatsappError: any) {
                 console.error("WhatsApp Error:", whatsappError);
-
-                // Save to backup sheet: "Not Connected on Whatsapp Pamex"
-                try {
-                    // Update this URL with the Google Script for the backup sheet
-                    const BACKUP_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzdndngvElGi39kjRQfSUKMzQD4FhJOzxkyBMZWXxyJ9kSih4He7zs-Y0zaX2TqYGWm/exec";
-
-                    await fetch(BACKUP_WEB_APP_URL, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: {
-                            "Content-Type": "text/plain;charset=utf-8",
-                        },
-                        body: JSON.stringify({
-                            ...payload,
-                            whatsapp_status: "FAILED",
-                            error_reason: whatsappError.message || "Template not found or number error",
-                            backup_sheet: "Not Connected on Whatsapp Pamex"
-                        }),
-                    });
-                } catch (backupError) {
-                    console.error("Backup Sheet Error:", backupError);
-                }
-
                 toast({
                     title: "WhatsApp Failed",
-                    description: "Details saved to backup sheet, but message not sent.",
+                    description: "Message not sent, but details saved to backup sheet.",
                     variant: "destructive",
                 });
             }
