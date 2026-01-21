@@ -184,6 +184,62 @@ export default function DataCollectionForm() {
                 description: "Data has been successfully saved to the Google Sheet.",
             });
 
+            // Send Interakt WhatsApp Message
+            try {
+                // Clean phone number: remove non-digits
+                let cleanNo = values.contactNo.replace(/\D/g, "");
+                let countryCode = "+91"; // Default
+                let phoneNumber = cleanNo;
+
+                // If number starts with 91 and is 12 digits, split it
+                if (cleanNo.length === 12 && cleanNo.startsWith("91")) {
+                    countryCode = "+91";
+                    phoneNumber = cleanNo.substring(2);
+                } else if (cleanNo.length === 10) {
+                    countryCode = "+91";
+                    phoneNumber = cleanNo;
+                }
+                // If it's something else, we take it as is or try to handle leading +
+                if (values.contactNo.startsWith("+")) {
+                    const parts = values.contactNo.split(" ");
+                    if (parts.length > 1) {
+                        countryCode = parts[0];
+                        phoneNumber = parts.slice(1).join("").replace(/\D/g, "");
+                    }
+                }
+
+                const interaktResponse = await fetch("/api/interakt", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: phoneNumber,
+                        countryCode: countryCode,
+                        bodyValues: [
+                            `${values.ownerName}, ${values.companyName}` // Variable {{1}}
+                        ],
+                    }),
+                });
+
+                if (!interaktResponse.ok) {
+                    const errorData = await interaktResponse.json();
+                    throw new Error(errorData.error || "Failed to send WhatsApp");
+                }
+
+                toast({
+                    title: "WhatsApp Sent!",
+                    description: "Thank you message has been sent via Interakt.",
+                });
+            } catch (whatsappError: any) {
+                console.error("WhatsApp Error:", whatsappError);
+                toast({
+                    title: "WhatsApp Failed",
+                    description: whatsappError.message || "Could not send automated message.",
+                    variant: "destructive",
+                });
+            }
+
             // Reset form
             form.reset();
             setImageFile(null);
@@ -292,7 +348,7 @@ export default function DataCollectionForm() {
                                             <Building2 className="w-3.5 h-3.5" /> Company Name <span className="text-destructive">*</span>
                                         </FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Indas Analytics LLP" {...field} className="h-9" />
+                                            <Input placeholder="INDUSANALYTICS PVT LTD" {...field} className="h-9" />
                                         </FormControl>
                                     </FormItem>
                                 )}

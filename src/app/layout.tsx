@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "INDASANALYTICS LLP - Data Collection",
-  description: "Smart Data Collection Portal for INDASANALYTICS LLP",
+  title: "INDUSANALYTICS PVT LTD - Data Collection",
+  description: "Smart Data Collection Portal for INDUSANALYTICS PVT LTD",
 };
 
 export default function RootLayout({
