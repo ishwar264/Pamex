@@ -63,6 +63,7 @@ const formSchema = z.object({
     factoryUnits: z.string(),
     currentSystem: z.string(),
     nameOfErp: z.string(),
+    stallDetails: z.string().min(1, "Stall details are required"),
     additionalRemark: z.string(),
     handleBy: z.string().min(1, "Handle by is required"),
     segmentType: z.string(),
@@ -80,6 +81,7 @@ export default function DataCollectionForm() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imageFile2, setImageFile2] = useState<File | null>(null);
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
@@ -107,6 +109,7 @@ export default function DataCollectionForm() {
             factoryUnits: "",
             currentSystem: "",
             nameOfErp: "",
+            stallDetails: "",
             additionalRemark: "",
             handleBy: "",
             segmentType: "",
@@ -135,9 +138,11 @@ export default function DataCollectionForm() {
 
         try {
             let imageBase64 = "";
+            let image2Base64 = "";
             let audioBase64 = "";
 
             if (imageFile) imageBase64 = await fileToBase64(imageFile);
+            if (imageFile2) image2Base64 = await fileToBase64(imageFile2);
             if (audioFile) audioBase64 = await fileToBase64(audioFile);
 
             const payload = {
@@ -161,9 +166,12 @@ export default function DataCollectionForm() {
                 factory: values.factoryUnits,
                 current_system: values.currentSystem,
                 erp_name: values.nameOfErp,
+                stall_details: values.stallDetails,
                 machine_color: values.machineColour,
                 imageFile: imageBase64,
-                imageName: imageFile ? `img_${Date.now()}_${imageFile.name}` : "",
+                imageName: imageFile ? `img1_${Date.now()}_${imageFile.name}` : "",
+                imageFile2: image2Base64,
+                imageName2: imageFile2 ? `img2_${Date.now()}_${imageFile2.name}` : "",
                 audioFile: audioBase64,
                 audioName: audioFile ? `audio_${Date.now()}_${audioFile.name}` : "",
             };
@@ -244,6 +252,7 @@ export default function DataCollectionForm() {
             // Reset form
             form.reset();
             setImageFile(null);
+            setImageFile2(null);
             setAudioFile(null);
             setIsCustomColor(false);
             setIsCustomSegment(false);
@@ -264,6 +273,12 @@ export default function DataCollectionForm() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setImageFile(e.target.files[0]);
+        }
+    };
+
+    const handleImage2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile2(e.target.files[0]);
         }
     };
 
@@ -452,20 +467,7 @@ export default function DataCollectionForm() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="handleBy"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <FormLabel className="flex items-center gap-2 text-xs">
-                                            <User className="w-3.5 h-3.5" /> Handle By <span className="text-destructive">*</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Representative" {...field} className="h-9" />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
+
                             <FormField
                                 control={form.control}
                                 name="segmentType"
@@ -605,13 +607,51 @@ export default function DataCollectionForm() {
                                 control={form.control}
                                 name="nameOfErp"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 lg:col-span-4">
+                                    <FormItem className="space-y-1 lg:col-span-1">
                                         <FormLabel className="flex items-center gap-2 text-xs">
                                             <Settings className="w-3.5 h-3.5" /> Name of ERP
                                         </FormLabel>
                                         <FormControl>
                                             <Input placeholder="Tally / SAP" {...field} className="h-9" />
                                         </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="handleBy"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-1 lg:col-span-1">
+                                        <FormLabel className="flex items-center gap-2 text-xs">
+                                            <User className="w-3.5 h-3.5" /> Handle By <span className="text-destructive">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Representative" {...field} className="h-9" />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="stallDetails"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-1 lg:col-span-2">
+                                        <FormLabel className="flex items-center gap-2 text-xs">
+                                            <MapPin className="w-3.5 h-3.5" /> Stall Details <span className="text-destructive">*</span>
+                                        </FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="h-9">
+                                                    <SelectValue placeholder="Select Stall" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Hall No. 1 | Stall No. K25">Hall No. 1 | Stall No. K25</SelectItem>
+                                                <SelectItem value="Hall No. 2 | Stall No. B22">Hall No. 2 | Stall No. B22</SelectItem>
+                                                <SelectItem value="Hall No. 3 | Stall No. E06">Hall No. 3 | Stall No. E06</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage className="text-[10px]" />
                                     </FormItem>
                                 )}
                             />
@@ -696,17 +736,17 @@ export default function DataCollectionForm() {
 
                         {/* Media Integration */}
                         {/* Media Integration */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-3">
                                 <Label className="text-sm flex items-center gap-2 font-semibold text-foreground">
-                                    <Camera className="w-4 h-4 text-primary" /> Image Capture
+                                    <Camera className="w-4 h-4 text-primary" /> Image 1 (Front)
                                 </Label>
                                 <div className="flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-xl bg-primary/5 hover:bg-primary/10 transition-all relative h-24">
                                     {imageFile ? (
                                         <div className="flex flex-col items-center gap-2">
                                             <Badge variant="secondary" className="gap-1.5 py-1 px-2 border-primary/20 bg-white/50 backdrop-blur-sm">
                                                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                                                {imageFile.name.length > 25 ? imageFile.name.substring(0, 22) + "..." : imageFile.name}
+                                                {imageFile.name.length > 20 ? imageFile.name.substring(0, 17) + "..." : imageFile.name}
                                             </Badge>
                                             <Button variant="ghost" size="sm" onClick={() => setImageFile(null)} className="text-destructive h-7 hover:bg-destructive/10">
                                                 <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
@@ -715,8 +755,8 @@ export default function DataCollectionForm() {
                                     ) : (
                                         <div className="flex flex-col items-center pointer-events-none">
                                             <Camera className="w-6 h-6 text-primary/60 mb-1.5" />
-                                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                                                Take Photo / Upload
+                                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                                Capture Image 1
                                             </p>
                                         </div>
                                     )}
@@ -725,6 +765,39 @@ export default function DataCollectionForm() {
                                         accept="image/*"
                                         capture="environment"
                                         onChange={handleImageChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <Label className="text-sm flex items-center gap-2 font-semibold text-foreground">
+                                    <Camera className="w-4 h-4 text-primary" /> Image 2 (Back)
+                                </Label>
+                                <div className="flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-xl bg-primary/5 hover:bg-primary/10 transition-all relative h-24">
+                                    {imageFile2 ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Badge variant="secondary" className="gap-1.5 py-1 px-2 border-primary/20 bg-white/50 backdrop-blur-sm">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                                {imageFile2.name.length > 20 ? imageFile2.name.substring(0, 17) + "..." : imageFile2.name}
+                                            </Badge>
+                                            <Button variant="ghost" size="sm" onClick={() => setImageFile2(null)} className="text-destructive h-7 hover:bg-destructive/10">
+                                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center pointer-events-none">
+                                            <Camera className="w-6 h-6 text-primary/60 mb-1.5" />
+                                            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                                Capture Image 2
+                                            </p>
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleImage2Change}
                                         className="absolute inset-0 opacity-0 cursor-pointer"
                                     />
                                 </div>
