@@ -109,7 +109,7 @@ export default function DataCollectionForm() {
             factoryUnits: "",
             currentSystem: "",
             nameOfErp: "",
-            stallDetails: "",
+            stallDetails: "Hall No. 1 | Stall No. K25",
             additionalRemark: "",
             handleBy: "",
             segmentType: "",
@@ -147,6 +147,7 @@ export default function DataCollectionForm() {
 
             const payload = {
                 ...values,
+                contactNo: values.contactNo.replace(/\D/g, ""), // Clean number for backend duplicate check
                 // Legacy fields for backward compatibility with the Google Script
                 cityPin: values.city && values.pinCode ? `${values.city}, ${values.pinCode}` : (values.city || values.pinCode || ""),
                 teamSizeFactory: values.factoryUnits ? `${values.teamSize} (${values.factoryUnits})` : values.teamSize,
@@ -166,17 +167,28 @@ export default function DataCollectionForm() {
                 factory: values.factoryUnits,
                 current_system: values.currentSystem,
                 erp_name: values.nameOfErp,
+                // Multiple variations for Stall Details to catch correct column in Google Script
+                stallDetails: values.stallDetails,
                 stall_details: values.stallDetails,
+                stall_no: values.stallDetails,
+                stallNo: values.stallDetails,
                 machine_color: values.machineColour,
                 imageFile: imageBase64,
                 imageName: imageFile ? `img1_${Date.now()}_${imageFile.name}` : "",
+                // Multiple variations for Second Image
                 imageFile2: image2Base64,
+                image2: image2Base64,
+                image_2: image2Base64,
                 imageName2: imageFile2 ? `img2_${Date.now()}_${imageFile2.name}` : "",
                 audioFile: audioBase64,
                 audioName: audioFile ? `audio_${Date.now()}_${audioFile.name}` : "",
             };
 
-            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyO2vk7uhfI9XRx_DZhV6L5is9FzIS6rEfIEGSVfXGGuw-_Qf-fF65TG6BdioXLQrPq/exec";
+            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwoAyxYm3KoT0kOO_ufgZvlvflUldlR4UK8yuIfxwLuM3H0LT8u82q5-PrSwNv1d6tBgQ/exec";
+
+            // Use a timeout to ensure if script doesn't respond, we don't hang
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             await fetch(WEB_APP_URL, {
                 method: "POST",
@@ -187,33 +199,28 @@ export default function DataCollectionForm() {
                 body: JSON.stringify(payload),
             });
 
+            clearTimeout(timeoutId);
+
+            // If we are here, the request was sent.
+            // Note: with no-cors we can't be sure if it was a duplicate on the server side
+            // but the new Google Script logic will prevent appending to sheet if it's a duplicate.
+
             toast({
-                title: "Submission Sent!",
-                description: "Data has been successfully saved to the Google Sheet.",
+                title: "Processing...",
+                description: "Sending details and WhatsApp message.",
             });
 
             // Send Interakt WhatsApp Message
             try {
                 // Clean phone number: remove non-digits
                 let cleanNo = values.contactNo.replace(/\D/g, "");
-                let countryCode = "+91"; // Default
+                let countryCode = "+91";
                 let phoneNumber = cleanNo;
 
-                // If number starts with 91 and is 12 digits, split it
                 if (cleanNo.length === 12 && cleanNo.startsWith("91")) {
-                    countryCode = "+91";
                     phoneNumber = cleanNo.substring(2);
                 } else if (cleanNo.length === 10) {
-                    countryCode = "+91";
                     phoneNumber = cleanNo;
-                }
-                // If it's something else, we take it as is or try to handle leading +
-                if (values.contactNo.startsWith("+")) {
-                    const parts = values.contactNo.split(" ");
-                    if (parts.length > 1) {
-                        countryCode = parts[0];
-                        phoneNumber = parts.slice(1).join("").replace(/\D/g, "");
-                    }
                 }
 
                 const interaktResponse = await fetch("/api/interakt", {
@@ -225,35 +232,49 @@ export default function DataCollectionForm() {
                         phoneNumber: phoneNumber,
                         countryCode: countryCode,
                         bodyValues: [
-                            `${values.ownerName}, ${values.companyName}` // Variable {{1}}
+                            `${values.ownerName}, ${values.companyName}`
                         ],
-                        leadData: values // Send full data for backup
+                        leadData: values
                     }),
                 });
 
-                if (!interaktResponse.ok) {
-                    const errorData = await interaktResponse.json();
-                    throw new Error(errorData.error || "Failed to send WhatsApp");
-                }
+                if (interaktResponse.ok) {
+                    toast({
+                        title: "Entry Completed!",
+                        description: "Data synced and WhatsApp sent successfully.",
+                    });
 
-                toast({
-                    title: "WhatsApp Sent!",
-                    description: "Thank you message has been sent via Interakt.",
-                });
+                    // Capture sticky values before resetting
+                    const currentStall = form.getValues("stallDetails");
+                    const currentHandleBy = form.getValues("handleBy");
+
+                    // Reset form but keep Stall Details and Handle By
+                    form.reset({
+                        companyName: "",
+                        ownerName: "",
+                        contactNo: "",
+                        email: "",
+                        city: "",
+                        pinCode: "",
+                        teamSize: "",
+                        factoryUnits: "",
+                        currentSystem: "",
+                        nameOfErp: "",
+                        stallDetails: currentStall,
+                        handleBy: currentHandleBy,
+                        additionalRemark: "",
+                        segmentType: "",
+                        machineColour: "",
+                        challenges: [],
+                    });
+
+                    setImageFile(null);
+                    setImageFile2(null);
+                    setAudioFile(null);
+                }
             } catch (whatsappError: any) {
                 console.error("WhatsApp Error:", whatsappError);
-                toast({
-                    title: "WhatsApp Failed",
-                    description: "Message not sent, but details saved to backup sheet.",
-                    variant: "destructive",
-                });
             }
-
-            // Reset form
-            form.reset();
-            setImageFile(null);
-            setImageFile2(null);
-            setAudioFile(null);
             setIsCustomColor(false);
             setIsCustomSegment(false);
             setRecordingTime(0);
@@ -639,7 +660,7 @@ export default function DataCollectionForm() {
                                         <FormLabel className="flex items-center gap-2 text-xs">
                                             <MapPin className="w-3.5 h-3.5" /> Stall Details <span className="text-destructive">*</span>
                                         </FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger className="h-9">
                                                     <SelectValue placeholder="Select Stall" />
