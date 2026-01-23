@@ -363,14 +363,23 @@ export default function DataCollectionForm() {
 
     return (
         <Card className="glass-card border-none overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b border-primary/10 py-3">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <Settings className="w-5 h-5 text-primary" />
-                    Client Information Form
-                </CardTitle>
-                <CardDescription className="text-xs">
-                    Please provide the following details for data analysis.
-                </CardDescription>
+            <CardHeader className="bg-primary/5 border-b border-primary/10 py-3 flex flex-row items-center justify-between gap-4">
+                <div className="flex flex-col">
+                    <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                        <Settings className="w-5 h-5 text-primary" />
+                        Client Information Form
+                    </CardTitle>
+                    <CardDescription className="text-[10px] md:text-xs">
+                        Please provide the following details for data analysis.
+                    </CardDescription>
+                </div>
+                <div className="shrink-0">
+                    <img
+                        src="/logo.png"
+                        alt="Indas Analytics Logo"
+                        className="h-8 md:h-12 w-auto object-contain"
+                    />
+                </div>
             </CardHeader>
             <CardContent className="pt-4">
                 <Form {...form}>
