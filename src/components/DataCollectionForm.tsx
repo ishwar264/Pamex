@@ -25,6 +25,7 @@ import {
     StopCircle,
     Play
 } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -376,10 +377,13 @@ export default function DataCollectionForm() {
                     </CardDescription>
                 </div>
                 <div className="shrink-0">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="Indas Analytics Logo"
+                        width={200}
+                        height={48}
                         className="h-8 md:h-12 w-auto object-contain"
+                        priority
                     />
                 </div>
             </CardHeader>
