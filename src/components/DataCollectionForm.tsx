@@ -109,7 +109,7 @@ export default function DataCollectionForm() {
             factoryUnits: "",
             currentSystem: "",
             nameOfErp: "",
-            stallDetails: "Hall No. 1 | Stall No. K25",
+            stallDetails: "Hall no. 1, Stall no. K25",
             additionalRemark: "",
             handleBy: "",
             segmentType: "",
@@ -232,7 +232,9 @@ export default function DataCollectionForm() {
                         phoneNumber: phoneNumber,
                         countryCode: countryCode,
                         bodyValues: [
-                            `${values.ownerName}, ${values.companyName}`
+                            `${values.ownerName}, ${values.companyName}`,
+                            values.handleBy,
+                            values.stallDetails
                         ],
                         leadData: values
                     }),
@@ -676,9 +678,9 @@ export default function DataCollectionForm() {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Hall No. 1 | Stall No. K25">Hall No. 1 | Stall No. K25</SelectItem>
-                                                <SelectItem value="Hall No. 2 | Stall No. B22">Hall No. 2 | Stall No. B22</SelectItem>
-                                                <SelectItem value="Hall No. 3 | Stall No. E06">Hall No. 3 | Stall No. E06</SelectItem>
+                                                <SelectItem value="Hall no. 1, Stall no. K25">Hall no. 1, Stall no. K25</SelectItem>
+                                                <SelectItem value="Hall no. 2, Stall no. B22">Hall no. 2, Stall no. B22</SelectItem>
+                                                <SelectItem value="Hall no. 3, Stall no. E06">Hall no. 3, Stall no. E06</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage className="text-[10px]" />

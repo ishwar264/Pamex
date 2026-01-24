@@ -22,7 +22,7 @@ export async function POST(request: Request) {
             phoneNumber: phoneNumber,
             type: "Template",
             template: {
-                name: "indasanalytics_",
+                name: "pamex_thankyou_message_",
                 languageCode: "en",
                 bodyValues: bodyValues
             }
